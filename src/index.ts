@@ -20,6 +20,7 @@ import {
   handleReset,
   handleDarlingsThoughts
 } from './commands.js';
+import { logConversation } from './logger.js';
 
 const client = new Client({
   intents: [
@@ -105,6 +106,8 @@ async function handleMessage(message: Message) {
     } else {
       await message.reply(response);
     }
+
+    await logConversation(message.author.tag, userMessage, response);
   } catch (error) {
     console.error('Error handling message:', error);
     await message.reply('*looks confused* Sorry darling, something went wrong in my head... Can you say that again? 💕');
