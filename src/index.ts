@@ -193,9 +193,20 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
+// Raw event listener to debug all Discord events
+client.on(Events.Raw, (data) => {
+  if (data.t === 'MESSAGE_CREATE') {
+    const channel = client.channels.cache.get(data.d.channel_id);
+    console.log(`🌍 RAW MESSAGE_CREATE - Channel: ${channel?.constructor?.name || 'Unknown'} (${data.d.channel_id}), User: ${data.d.author?.username}, isDM: ${!data.d.guild_id}`);
+    if (!data.d.guild_id) {
+      console.log(`✨ RAW DM DETECTED: "${data.d.content}"`);
+    }
+  }
+});
+
 // Primary message handler for all messages
 client.on(Events.MessageCreate, async (message) => {
-  console.log(`🔍 RAW EVENT - Channel Type: ${message.channel.type}, isDMBased: ${message.channel.isDMBased?.()}, Author: ${message.author.tag}`);
+  console.log(`🔍 MessageCreate Event - Channel Type: ${message.channel.type}, isDMBased: ${message.channel.isDMBased?.()}, Author: ${message.author.tag}`);
   
   // Explicitly handle DMs in a separate try block
   if (message.author.bot) return;
