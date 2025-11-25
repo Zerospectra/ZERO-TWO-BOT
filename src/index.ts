@@ -193,7 +193,19 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-client.on(Events.MessageCreate, handleMessage);
+// Primary message handler for all messages
+client.on(Events.MessageCreate, async (message) => {
+  console.log(`🔍 RAW EVENT - Channel Type: ${message.channel.type}, isDMBased: ${message.channel.isDMBased?.()}, Author: ${message.author.tag}`);
+  
+  // Explicitly handle DMs in a separate try block
+  if (message.author.bot) return;
+  
+  if (message.channel.isDMBased?.()) {
+    console.log(`💌 DM DETECTED from ${message.author.tag}: "${message.content}"`);
+  }
+  
+  await handleMessage(message);
+});
 
 client.on(Events.Error, (error) => {
   console.error('Discord client error:', error);
