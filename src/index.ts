@@ -64,13 +64,15 @@ async function handleMessage(message: Message) {
   if (message.author.bot) return;
 
   const channelId = message.channelId;
-  const isDM = message.channel.type === ChannelType.DM;
+  const isDM = message.channel.isDMBased && message.channel.isDMBased();
   const isMentioned = message.mentions.has(client.user!.id);
   const isActivated = memory.isActivated(channelId);
 
   const shouldRespond = isDM || isMentioned || isActivated;
 
   if (!shouldRespond) return;
+
+  console.log(`📨 Message from ${message.author.tag}: isDM=${isDM}, isMentioned=${isMentioned}, isActivated=${isActivated}`);
 
   if (isActivated && !isMentioned) {
     const random = Math.random() * 100;
