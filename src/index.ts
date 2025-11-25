@@ -193,27 +193,51 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-// Raw event listener to debug all Discord events
-client.on(Events.Raw, (data) => {
-  if (data.t === 'MESSAGE_CREATE') {
-    const channel = client.channels.cache.get(data.d.channel_id);
-    console.log(`🌍 RAW MESSAGE_CREATE - Channel: ${channel?.constructor?.name || 'Unknown'} (${data.d.channel_id}), User: ${data.d.author?.username}, isDM: ${!data.d.guild_id}`);
-    if (!data.d.guild_id) {
-      console.log(`✨ RAW DM DETECTED: "${data.d.content}"`);
+// Raw event listener for DMs since MessageCreate event doesn't always fire for DMs
+client.on(Events.Raw, async (data) => {
+  if (data.t === 'MESSAGE_CREATE' && !data.d.guild_id) {
+    try {
+      // This is a DM - process it directly
+      const user = await client.users.fetch(data.d.author.id);
+      if (user.bot) return;
+
+      const channelId = data.d.channel_id;
+      const userMessage = data.d.content;
+
+      console.log(`💌 DM DETECTED from ${data.d.author.username}: "${userMessage}"`);
+      console.log(`🔄 Generating response for: ${userMessage.substring(0, 50)}...`);
+
+      memory.addMessage(channelId, 'user', userMessage);
+      const history = memory.getHistory(channelId, 50);
+      const response = await generateResponse(userMessage, history);
+
+      console.log(`✅ Response generated: ${response.substring(0, 50)}...`);
+
+      memory.addMessage(channelId, 'assistant', response);
+
+      // Send the response
+      const dmChannel = await user.createDM();
+      if (response.length > 2000) {
+        const chunks = response.match(/[\s\S]{1,2000}/g) || [];
+        for (const chunk of chunks) {
+          await dmChannel.send(chunk);
+        }
+      } else {
+        await dmChannel.send(response);
+      }
+
+      await logConversation(data.d.author.username, userMessage, response);
+    } catch (error) {
+      console.error('❌ Error handling DM from Raw event:', error);
     }
   }
 });
 
-// Primary message handler for all messages
+// Primary message handler for all messages (server + mentions)
 client.on(Events.MessageCreate, async (message) => {
-  console.log(`🔍 MessageCreate Event - Channel Type: ${message.channel.type}, isDMBased: ${message.channel.isDMBased?.()}, Author: ${message.author.tag}`);
-  
-  // Explicitly handle DMs in a separate try block
+  // Skip DMs as they're handled by Raw event
   if (message.author.bot) return;
-  
-  if (message.channel.isDMBased?.()) {
-    console.log(`💌 DM DETECTED from ${message.author.tag}: "${message.content}"`);
-  }
+  if (message.channel.isDMBased?.()) return;
   
   await handleMessage(message);
 });
