@@ -61,28 +61,37 @@ async function registerCommands() {
 }
 
 async function handleMessage(message: Message) {
-  if (message.author.bot) return;
-
-  const channelId = message.channelId;
-  const isDM = message.channel.isDMBased && message.channel.isDMBased();
-  const isMentioned = message.mentions.has(client.user!.id);
-  const isActivated = memory.isActivated(channelId);
-
-  const shouldRespond = isDM || isMentioned || isActivated;
-
-  if (!shouldRespond) return;
-
-  console.log(`📨 Message from ${message.author.tag}: isDM=${isDM}, isMentioned=${isMentioned}, isActivated=${isActivated}`);
-
-  if (isActivated && !isMentioned) {
-    const random = Math.random() * 100;
-    if (random > config.randomMessageChance && Math.random() > 0.3) {
-      memory.addMessage(channelId, 'user', message.content);
-      return;
-    }
-  }
-
   try {
+    if (message.author.bot) return;
+
+    const channelId = message.channelId;
+    let isDM = false;
+    
+    // Check if it's a DM channel
+    if (message.channel && 'isDMBased' in message.channel && typeof message.channel.isDMBased === 'function') {
+      isDM = message.channel.isDMBased();
+    } else if (message.channel && 'recipient' in message.channel) {
+      // Direct check for DMChannel type
+      isDM = true;
+    }
+
+    const isMentioned = message.mentions.has(client.user!.id);
+    const isActivated = memory.isActivated(channelId);
+
+    const shouldRespond = isDM || isMentioned || isActivated;
+
+    console.log(`📨 Message from ${message.author.tag} in ${message.channel?.constructor?.name}: isDM=${isDM}, isMentioned=${isMentioned}, isActivated=${isActivated}, shouldRespond=${shouldRespond}`);
+
+    if (!shouldRespond) return;
+
+    if (isActivated && !isMentioned) {
+      const random = Math.random() * 100;
+      if (random > config.randomMessageChance && Math.random() > 0.3) {
+        memory.addMessage(channelId, 'user', message.content);
+        return;
+      }
+    }
+
     if ('sendTyping' in message.channel) {
       await message.channel.sendTyping();
     }
@@ -92,11 +101,15 @@ async function handleMessage(message: Message) {
       userMessage = userMessage.replace(/<@!?\d+>/g, '').trim();
     }
 
+    console.log(`🔄 Generating response for: ${userMessage.substring(0, 50)}...`);
+
     memory.addMessage(channelId, 'user', userMessage);
     
     const history = memory.getHistory(channelId, 50);
 
     const response = await generateResponse(userMessage, history);
+
+    console.log(`✅ Response generated: ${response.substring(0, 50)}...`);
 
     memory.addMessage(channelId, 'assistant', response);
 
@@ -111,8 +124,12 @@ async function handleMessage(message: Message) {
 
     await logConversation(message.author.tag, userMessage, response);
   } catch (error) {
-    console.error('Error handling message:', error);
-    await message.reply('*looks confused* Sorry darling, something went wrong in my head... Can you say that again? 💕');
+    console.error('❌ Error in handleMessage:', error);
+    try {
+      await message.reply('*looks confused* Sorry darling, something went wrong in my head... Can you say that again? 💕');
+    } catch (replyError) {
+      console.error('Could not send error reply:', replyError);
+    }
   }
 }
 
