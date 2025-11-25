@@ -67,11 +67,12 @@ async function handleMessage(message: Message) {
     const channelId = message.channelId;
     let isDM = false;
     
-    // Check if it's a DM channel
-    if (message.channel && 'isDMBased' in message.channel && typeof message.channel.isDMBased === 'function') {
-      isDM = message.channel.isDMBased();
-    } else if (message.channel && 'recipient' in message.channel) {
-      // Direct check for DMChannel type
+    // Check if it's a DM channel - using multiple methods
+    if (message.channel.isDMBased?.()) {
+      isDM = true;
+    } else if (message.channel.type === ChannelType.DM) {
+      isDM = true;
+    } else if (message.channel.type === ChannelType.GroupDM) {
       isDM = true;
     }
 
@@ -80,7 +81,7 @@ async function handleMessage(message: Message) {
 
     const shouldRespond = isDM || isMentioned || isActivated;
 
-    console.log(`📨 Message from ${message.author.tag} in ${message.channel?.constructor?.name}: isDM=${isDM}, isMentioned=${isMentioned}, isActivated=${isActivated}, shouldRespond=${shouldRespond}`);
+    console.log(`📨 [${message.channel.type}] Message from ${message.author.tag}: isDM=${isDM}, isMentioned=${isMentioned}, isActivated=${isActivated}`);
 
     if (!shouldRespond) return;
 
