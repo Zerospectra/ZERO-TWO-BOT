@@ -85,14 +85,6 @@ async function handleMessage(message: Message) {
 
     if (!shouldRespond) return;
 
-    if (isActivated && !isMentioned) {
-      const random = Math.random() * 100;
-      if (random > config.randomMessageChance && Math.random() > 0.3) {
-        memory.addMessage(channelId, 'user', message.content);
-        return;
-      }
-    }
-
     if ('sendTyping' in message.channel) {
       await message.channel.sendTyping();
     }
