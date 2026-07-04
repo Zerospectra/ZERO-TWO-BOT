@@ -4,7 +4,7 @@ import {
   PermissionFlagsBits 
 } from 'discord.js';
 import { memory } from './memory.js';
-import { generateRandomThought } from './gemini.js';
+import { generateProactiveDM, generateRandomThought } from './gemini.js';
 
 export const commands = [
   new SlashCommandBuilder()
@@ -28,6 +28,14 @@ export const commands = [
   new SlashCommandBuilder()
     .setName('darlings-thoughts')
     .setDescription('Zero Two shares her current thoughts based on your conversation'),
+
+    new SlashCommandBuilder()
+    .setName('dm')
+    .setDescription('Have Zero Two send someone a private message')
+    .addUserOption(option =>
+      option.setName('user')
+        .setDescription('The user Zero Two should DM')
+        .setRequired(true)),
 ].map(command => command.toJSON());
 
 export async function handlePing(interaction: ChatInputCommandInteraction) {
@@ -39,6 +47,14 @@ export async function handlePing(interaction: ChatInputCommandInteraction) {
 }
 
 export async function handleActivate(interaction: ChatInputCommandInteraction) {
+  if (!interaction.guildId) {
+    await interaction.reply({
+      content: '*tilts head* Darling, `/activate` only works in a server channel. In DMs, just talk to me and I reply automatically. 💕',
+      ephemeral: true
+    });
+    return;
+  }
+
   const channelId = interaction.channelId;
   
   if (memory.isActivated(channelId)) {
@@ -57,6 +73,14 @@ export async function handleActivate(interaction: ChatInputCommandInteraction) {
 }
 
 export async function handleDeactivate(interaction: ChatInputCommandInteraction) {
+  if (!interaction.guildId) {
+    await interaction.reply({
+      content: '*giggles softly* Darling, `/deactivate` is only for server channels. In DMs, I only reply when you message me anyway. 💕',
+      ephemeral: true
+    });
+    return;
+  }
+
   const channelId = interaction.channelId;
   
   if (!memory.isActivated(channelId)) {
@@ -116,5 +140,50 @@ export async function handleDarlingsThoughts(interaction: ChatInputCommandIntera
     await interaction.editReply({
       content: '*shakes head* Sorry darling, my thoughts are a bit scrambled right now. Try again in a moment! 💕'
     });
+  }
+}
+
+export async function handleDM(interaction: ChatInputCommandInteraction) {
+  const targetUser = interaction.options.getUser('user', true);
+
+  if (targetUser.bot) {
+    await interaction.reply({
+      content: '*shakes head* I can\'t talk to robots, darling. Pick a real person for me. 💕',
+      ephemeral: true
+    });
+    return;
+  }
+
+  await interaction.deferReply({ ephemeral: true });
+
+  try {
+    const dmChannel = await targetUser.createDM();
+    const channelId = dmChannel.id;
+    const hasPriorHistory = memory.hasHistory(channelId);
+    const history = memory.getHistory(channelId, 50);
+
+    const dmMessage = await generateProactiveDM(history, hasPriorHistory);
+
+    await targetUser.send(dmMessage);
+    memory.addMessage(channelId, 'assistant', dmMessage);
+
+    await interaction.editReply({
+      content: `Sent a DM to ${targetUser}!`
+    });
+  } catch (error) {
+    console.error('Error sending proactive DM:', error);
+
+    const errorMessage = '*looks frustrated* I couldn\'t DM that user, darling. Their DMs may be closed, they may have blocked me. :( ';
+
+    if (interaction.deferred || interaction.replied) {
+      await interaction.editReply({
+        content: errorMessage
+      });
+    } else {
+      await interaction.reply({
+        content: errorMessage,
+        ephemeral: true
+      });
+    }
   }
 }

@@ -5,7 +5,7 @@ dotenv.config();
 export const config = {
   discordToken: process.env.DISCORD_BOT_TOKEN || '',
   googleApiKey: process.env.GOOGLE_API_KEY || '',
-  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   personalityPrompt: process.env.ZEROTWO_PERSONALITY_PROMPT || '',
   randomMessageChance: parseInt(process.env.RANDOM_MESSAGE_CHANCE || '5', 10),
 };

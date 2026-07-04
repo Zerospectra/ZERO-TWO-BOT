@@ -7,7 +7,7 @@ This is a Discord bot featuring Zero Two from "Darling in the FranXX" with AI-po
 - **November 24, 2025**: Initial project setup with complete bot implementation
   - Implemented all 5 slash commands (/ping, /activate, /deactivate, /reset, /darlings-thoughts)
   - Added conversation memory system (1000 message history)
-  - Integrated Google Gemini AI (gemini-2.5-flash-lite)
+  - Integrated Google Gemini AI (gemini-2.5-flash)
   - Set up Do Not Disturb status with custom Rich Presence
   - Created comprehensive personality system for Zero Two
 
@@ -50,7 +50,7 @@ Required secrets:
 - `GOOGLE_API_KEY`: Google AI Studio API key
 
 Optional configuration:
-- `GEMINI_MODEL`: AI model selection (default: gemini-2.5-flash-lite)
+- `GEMINI_MODEL`: AI model selection (default: gemini-2.5-flash)
 - `ZEROTWO_PERSONALITY_PROMPT`: Custom personality override
 - `RANDOM_MESSAGE_CHANCE`: Probability (0-100) for spontaneous messages (default: 5)
 
@@ -84,7 +84,7 @@ Optional configuration:
 ## User Preferences
 - Language: English
 - Character: Zero Two from Darling in the FranXX
-- AI Provider: Google Gemini AI (gemini-2.5-flash-lite)
+- AI Provider: Google Gemini AI (gemini-2.5-flash)
 - Status: Do Not Disturb with custom "Thinking about my darling" message
 
 ## Notes

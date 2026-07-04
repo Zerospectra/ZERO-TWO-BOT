@@ -7,7 +7,8 @@ import {
   REST,
   Routes,
   Message,
-  ChannelType
+  ChannelType,
+  Partials
 } from 'discord.js';
 import { config } from './config.js';
 import { initializeGemini, generateResponse } from './gemini.js';
@@ -18,7 +19,8 @@ import {
   handleActivate,
   handleDeactivate,
   handleReset,
-  handleDarlingsThoughts
+  handleDarlingsThoughts,
+  handleDM
 } from './commands.js';
 import { logConversation } from './logger.js';
 
@@ -29,6 +31,7 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.DirectMessages,
   ],
+  partials: [Partials.Channel],
   presence: {
     status: PresenceUpdateStatus.DoNotDisturb,
     activities: [{
@@ -49,16 +52,17 @@ async function registerCommands() {
   try {
     console.log('🔄 Registering slash commands...');
     
-    await rest.put(
-      Routes.applicationCommands(client.user!.id),
-      { body: commands }
-    );
-
-    console.log('✅ Slash commands registered successfully!');
+   const result = await rest.put(
+  Routes.applicationCommands(client.user!.id),
+  { body: commands }
+) as any[];
+console.log(`✅ Slash commands registered successfully! Count: ${result.length}`);
+console.log('Registered commands:', result.map(c => c.name).join(', '));
   } catch (error) {
     console.error('❌ Error registering commands:', error);
   }
 }
+
 
 async function handleMessage(message: Message) {
   try {
@@ -168,6 +172,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
       case 'darlings-thoughts':
         await handleDarlingsThoughts(interaction);
         break;
+         case 'dm':
+      await handleDM(interaction);
+      break;
     }
   } catch (error) {
     console.error('Error handling command:', error);
@@ -185,51 +192,9 @@ client.on(Events.InteractionCreate, async (interaction) => {
   }
 });
 
-// Raw event listener for DMs since MessageCreate event doesn't always fire for DMs
-client.on(Events.Raw, async (data) => {
-  if (data.t === 'MESSAGE_CREATE' && !data.d.guild_id) {
-    try {
-      // This is a DM - process it directly
-      const user = await client.users.fetch(data.d.author.id);
-      if (user.bot) return;
-
-      const channelId = data.d.channel_id;
-      const userMessage = data.d.content;
-
-      console.log(`💌 DM DETECTED from ${data.d.author.username}: "${userMessage}"`);
-      console.log(`🔄 Generating response for: ${userMessage.substring(0, 50)}...`);
-
-      memory.addMessage(channelId, 'user', userMessage);
-      const history = memory.getHistory(channelId, 50);
-      const response = await generateResponse(userMessage, history);
-
-      console.log(`✅ Response generated: ${response.substring(0, 50)}...`);
-
-      memory.addMessage(channelId, 'assistant', response);
-
-      // Send the response
-      const dmChannel = await user.createDM();
-      if (response.length > 2000) {
-        const chunks = response.match(/[\s\S]{1,2000}/g) || [];
-        for (const chunk of chunks) {
-          await dmChannel.send(chunk);
-        }
-      } else {
-        await dmChannel.send(response);
-      }
-
-      await logConversation(data.d.author.username, userMessage, response);
-    } catch (error) {
-      console.error('❌ Error handling DM from Raw event:', error);
-    }
-  }
-});
-
-// Primary message handler for all messages (server + mentions)
+// Primary message handler for all messages (server + DMs)
 client.on(Events.MessageCreate, async (message) => {
-  // Skip DMs as they're handled by Raw event
   if (message.author.bot) return;
-  if (message.channel.isDMBased?.()) return;
   
   await handleMessage(message);
 });
@@ -272,3 +237,4 @@ async function start() {
 }
 
 start();
+

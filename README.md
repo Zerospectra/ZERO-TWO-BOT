@@ -46,7 +46,7 @@ An AI-powered Discord bot featuring **Zero Two** from *Darling in the FranXX*, p
    | `GOOGLE_API_KEY` | Your Google AI API key |
 
 **Optional Configuration** (add to Secrets tab if desired):
-- `GEMINI_MODEL` - The Gemini model to use (default: `gemini-2.5-flash-lite`)
+- `GEMINI_MODEL` - The Gemini model to use (default: `gemini-2.5-flash`)
 - `ZEROTWO_PERSONALITY_PROMPT` - Custom personality prompt (optional - default included)
 - `RANDOM_MESSAGE_CHANCE` - Chance (0-100) for spontaneous messages (default: `5`)
 
@@ -101,7 +101,7 @@ Add a `ZEROTWO_PERSONALITY_PROMPT` secret with your custom prompt to modify her 
 
 ### Model Selection
 Change the `GEMINI_MODEL` secret to use different Gemini models:
-- `gemini-2.5-flash-lite` (default - fast and efficient)
+- `gemini-2.5-flash` (default - fast and efficient)
 - `gemini-2.0-flash-exp` (experimental)
 - `gemini-1.5-pro` (more capable, slower)
 
