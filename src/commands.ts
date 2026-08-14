@@ -4,7 +4,7 @@ import {
   PermissionFlagsBits 
 } from 'discord.js';
 import { memory } from './memory.js';
-import { generateProactiveDM, generateRandomThought } from './gemini.js';
+import { generateProactiveDM, generateRandomThought } from './ai.js';
 
 export const commands = [
   new SlashCommandBuilder()

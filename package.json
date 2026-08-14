@@ -7,9 +7,11 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "tsc && node dist/index.js"
+    "dev": "tsc && node dist/index.js",
+    "dev:gemini": "tsc && cross-env AI_PROVIDER=gemini node dist/index.js",
+    "dev:ollama": "tsc && cross-env AI_PROVIDER=ollama node dist/index.js"
   },
-  "keywords": ["discord", "bot", "zerotwo", "gemini", "ai"],
+  "keywords": ["discord", "bot", "zerotwo", "gemini", "ollama", "ai"],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -19,6 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.9.1",
+    "cross-env": "^7.0.3",
     "typescript": "^5.6.3"
   }
 }

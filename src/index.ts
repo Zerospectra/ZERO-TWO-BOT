@@ -11,7 +11,7 @@ import {
   Partials
 } from 'discord.js';
 import { config } from './config.js';
-import { initializeGemini, generateResponse } from './gemini.js';
+import { initializeAI, generateResponse } from './ai.js';
 import { memory } from './memory.js';
 import { 
   commands,
@@ -137,7 +137,8 @@ client.once(Events.ClientReady, async (readyClient) => {
   console.log(`✅ Logged in as: ${readyClient.user.tag}`);
   console.log(`✅ Bot ID: ${readyClient.user.id}`);
   console.log(`✅ Serving ${readyClient.guilds.cache.size} server(s)`);
-  console.log(`✅ Model: ${config.geminiModel}`);
+  console.log(`✅ AI Provider: ${config.aiProvider.toUpperCase()}`);
+  console.log(`✅ Model: ${config.aiProvider === 'ollama' ? config.ollamaModel : config.geminiModel}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   await registerCommands();
@@ -216,7 +217,7 @@ async function start() {
       process.exit(1);
     }
 
-    if (!config.googleApiKey) {
+    if (config.aiProvider === 'gemini' && !config.googleApiKey) {
       console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.error('❌ GOOGLE_API_KEY is missing!');
       console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -227,7 +228,7 @@ async function start() {
       process.exit(1);
     }
 
-    initializeGemini();
+    initializeAI();
 
     await client.login(config.discordToken);
   } catch (error) {
