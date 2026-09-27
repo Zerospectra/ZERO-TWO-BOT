@@ -1,168 +1,114 @@
-# 🌸 Zero Two Discord Bot
+# Zero Two Discord Bot
 
-An AI-powered Discord bot featuring **Zero Two** from *Darling in the FranXX*, powered by Google's Gemini AI. She stays completely in character, remembers conversations, and can chat freely in your Discord server!
+A Discord bot that plays Zero Two from *Darling in the FranXX*. She talks in character, remembers what you said, and hangs out in your server or your DMs. Replies come from Google Gemini or from a local model through Ollama.
 
-## ✨ Features
+## What she does
 
-- **🎭 Authentic Zero Two Personality**: Strict in-character responses with her signature speech patterns and behavior
-- **💭 Conversation Memory**: Remembers up to 1000 messages per channel/DM for contextual conversations
-- **💬 Multiple Chat Modes**:
-  - Responds to @mentions anywhere
-  - Replies to all DMs automatically
-  - Can be activated to chat freely in specific channels
-  - Sometimes joins a conversation in a channel where she is not activated
-  - Now and then, sends a DM to a user who is active in a server with her (rarely)
-- **🎯 Slash Commands**: Easy-to-use commands for interaction
-- **🔴 Custom Status**: "Do Not Disturb" with "𝓣𝓱𝓲𝓷𝓴𝓲𝓷𝓰 𝓪𝓫𝓸𝓾𝓽 𝓶𝔂 𝓭𝓪𝓻𝓵𝓲𝓷𝓰"
-- **⚙️ Fully Configurable**: Customize personality, model, and behavior via environment variables
+- Replies when you @mention her, and replies to every DM.
+- Talks freely in any channel where you run `/activate`.
+- Now and then jumps into a conversation in other channels on her own.
+- Once in a while, DMs someone who has been active in the server. This is rare on purpose.
+- Remembers the last 1000 messages per channel or DM. The memory is in RAM, so it resets when the bot restarts.
+- Logs every conversation to `conversation-logs/<date>.log`.
+- Shows as Do Not Disturb with the status "𝓣𝓱𝓲𝓷𝓴𝓲𝓷𝓰 𝓪𝓫𝓸𝓾𝓽 𝓶𝔂 𝓭𝓪𝓻𝓵𝓲𝓷𝓰".
 
-## 🚀 Setup Instructions
+## Commands
 
-### 1. Get Your Credentials
+| Command | What it does |
+|---------|--------------|
+| `/ping` | Shows her response time. |
+| `/activate` | Lets her talk freely in the current channel. Needs Manage Messages. |
+| `/deactivate` | Stops her talking freely in the channel. Needs Manage Messages. |
+| `/reset` | Clears her memory of the conversation in the channel. |
+| `/darlings-thoughts` | She says what is on her mind, based on the chat so far. |
+| `/dm <user>` | She sends that user a private message. Only you see the confirmation. |
 
-#### Discord Bot Token:
-1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
-2. Click "New Application" and name it (e.g., "Zero Two")
-3. Go to the "Bot" tab and click "Add Bot"
-4. Under "Privileged Gateway Intents", enable:
-   - ✅ Message Content Intent
-   - ✅ Server Members Intent (optional)
-5. Click "Reset Token" and copy your bot token
-6. **Save this token** - you'll need it for the Secrets tab
+## Setup
 
-#### Google AI API Key:
-1. Go to [Google AI Studio](https://aistudio.google.com/apikey)
-2. Click "Create API Key"
-3. Copy your API key
-4. **Save this key** - you'll need it for the Secrets tab
+### 1. Get a Discord bot token
 
-### 2. Configure the Bot on Replit
+1. Open the [Discord Developer Portal](https://discord.com/developers/applications) and create a new application.
+2. In the **Bot** tab, turn on **Message Content Intent**. Without it, the bot cannot log in.
+3. Click **Reset Token** and copy the token.
 
-1. Go to the **Secrets** tab (🔒 icon in the left sidebar)
-2. Add the following secrets:
+### 2. Pick an AI provider
 
-   | Key | Value |
-   |-----|-------|
-   | `DISCORD_BOT_TOKEN` | Your Discord bot token |
-   | `GOOGLE_API_KEY` | Your Google AI API key |
+- **Gemini:** get a key from [Google AI Studio](https://aistudio.google.com/apikey). The free tier has low limits (about 20 requests a day for `gemini-2.5-flash`), so a busy server runs out fast.
+- **Ollama:** install [Ollama](https://ollama.com) and pull a model. It is free and has no limits, but it runs on your own PC.
 
-**Optional Configuration** (add to Secrets tab if desired):
-- `GEMINI_MODEL` - The Gemini model to use (default: `gemini-2.5-flash`)
-- `ZEROTWO_PERSONALITY_PROMPT` - Custom personality prompt (optional - default included)
-- `RANDOM_MESSAGE_CHANCE` - Chance (0-100) that she replies to a message in a channel where she is not activated (default: `5`). Set `0` to turn this off.
-- `RANDOM_DM_ENABLED` - Set `false` to turn off random DMs (default: `true`)
-- `RANDOM_DM_MIN_HOURS` - Minimum hours between two random DMs (default: `6`)
-- `RANDOM_DM_USER_COOLDOWN_HOURS` - Minimum hours before the same user gets another random DM (default: `72`)
+### 3. Fill in `.env`
 
-### 3. Invite the Bot to Your Server
+Copy `.env.example` to `.env` and set:
 
-1. In Discord Developer Portal, go to "OAuth2" → "URL Generator"
-2. Select scopes:
-   - ✅ `bot`
-   - ✅ `applications.commands`
-3. Select bot permissions:
-   - ✅ Send Messages
-   - ✅ Read Messages/View Channels
-   - ✅ Read Message History
-   - ✅ Use Slash Commands
-   - ✅ Manage Messages (for /activate and /deactivate commands)
-4. Copy the generated URL and open it in your browser
-5. Select your server and authorize the bot
+| Key | Value |
+|-----|-------|
+| `DISCORD_BOT_TOKEN` | Your bot token |
+| `AI_PROVIDER` | `gemini` or `ollama` (default: `gemini`) |
+| `GOOGLE_API_KEY` | Your Gemini key (only for Gemini) |
+| `GEMINI_MODEL` | Default: `gemini-2.5-flash` |
+| `OLLAMA_MODEL` | The name of a model you pulled (default: `llama3`) |
+| `OLLAMA_BASE_URL` | Default: `http://localhost:11434` |
 
-### 4. Run the Bot
+Optional settings:
 
-1. Click the **Run** button at the top of Replit
-2. Wait for the bot to compile and start
-3. You should see: `🌸 Zero Two Discord Bot Online! 🌸`
-4. The bot is now ready to use!
+| Key | What it does |
+|-----|--------------|
+| `ZEROTWO_PERSONALITY_PROMPT` | Replaces her default personality prompt. |
+| `RANDOM_MESSAGE_CHANCE` | Chance (0-100) that she replies to a message in a channel where she is not activated. Default `5`. Set `0` to turn it off. |
+| `RANDOM_DM_ENABLED` | Set `false` to stop random DMs. |
+| `RANDOM_DM_MIN_HOURS` | Minimum hours between two random DMs. Default `6`. |
+| `RANDOM_DM_USER_COOLDOWN_HOURS` | Minimum hours before the same person gets another one. Default `72`. |
 
-## 📝 Commands
+`.env` is in `.gitignore`, so your keys stay off GitHub.
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `/ping` | Check Zero Two's response time | `/ping` |
-| `/activate` | Let Zero Two chat freely in the current channel | `/activate` |
-| `/deactivate` | Stop Zero Two from chatting freely in the channel | `/deactivate` |
-| `/reset` | Clear Zero Two's memory of the conversation | `/reset` |
-| `/darlings-thoughts` | Zero Two shares her current thoughts based on chat history | `/darlings-thoughts` |
+### 4. Invite her to your server
 
-## 💬 How to Chat with Zero Two
+In the Developer Portal, go to **OAuth2 > URL Generator**. Select the `bot` and `applications.commands` scopes. Select these permissions: View Channels, Send Messages, Read Message History, and Manage Messages. Open the URL and pick your server.
 
-### In Servers:
-- **@mention her**: `@Zero Two hello!` - She'll respond to mentions anywhere
-- **Use /activate**: In any channel, use `/activate` to let her chat freely
-  - She'll respond to all messages in that channel
-  - Use `/deactivate` to stop free chatting
-- **Random chime-ins**: In other channels, she sometimes replies to a message on her own
+### 5. Run it
 
-### In DMs:
-- Just send her a message! She always responds to DMs
-
-## 🎨 Customization
-
-### Custom Personality Prompt
-Add a `ZEROTWO_PERSONALITY_PROMPT` secret with your custom prompt to modify her behavior while keeping her in character.
-
-### Model Selection
-Change the `GEMINI_MODEL` secret to use different Gemini models:
-- `gemini-2.5-flash` (default - fast and efficient)
-- `gemini-2.0-flash-exp` (experimental)
-- `gemini-1.5-pro` (more capable, slower)
-
-### Random Chime-ins
-Set `RANDOM_MESSAGE_CHANCE` (0-100) to control how often Zero Two joins a conversation in a channel where she is not activated. Set `0` to turn this off.
-
-### Random DMs
-Now and then, Zero Two sends a DM to a user who sent a server message in the last 30 minutes. These rules keep the DMs rare:
-- Two random DMs are at least `RANDOM_DM_MIN_HOURS` apart (default: 6 hours).
-- The same user does not get another random DM within `RANDOM_DM_USER_COOLDOWN_HOURS` (default: 72 hours).
-- After a restart, she waits `RANDOM_DM_MIN_HOURS` before the first random DM.
-- At each check (every 15 minutes), there is only a 25% chance that she sends a DM.
-
-Set `RANDOM_DM_ENABLED=false` to turn this off.
-
-## 🛠️ Technical Details
-
-- **Framework**: Discord.js v14
-- **AI Model**: Google Gemini AI (configurable)
-- **Language**: TypeScript
-- **Memory**: 1000 messages per channel/DM
-- **Status**: Do Not Disturb with custom activity
-
-## 📋 Project Structure
-
-```
-├── src/
-│   ├── index.ts          # Main bot entry point
-│   ├── config.ts         # Configuration management
-│   ├── personality.ts    # Zero Two personality prompt
-│   ├── memory.ts         # Conversation memory system
-│   ├── gemini.ts         # Gemini AI integration
-│   └── commands.ts       # Slash command handlers
-├── package.json          # Dependencies
-├── tsconfig.json         # TypeScript configuration
-└── README.md            # This file
+```bash
+npm install
+npm run dev          # uses AI_PROVIDER from .env
+npm run dev:gemini   # always Gemini
+npm run dev:ollama   # always Ollama
 ```
 
-## 🐛 Troubleshooting
+When she is ready, the console shows `Zero Two Discord Bot Online!` and the provider she is using. Slash commands can take a few minutes to show up in Discord.
 
-### Bot doesn't respond:
-- Check that both `DISCORD_BOT_TOKEN` and `GOOGLE_API_KEY` are set in the Secrets tab
-- Make sure the bot has the "Message Content Intent" enabled in Discord Developer Portal
-- Verify the bot has permissions to read and send messages in the channel
+## How the random DMs work
 
-### Commands don't appear:
-- Wait a few minutes for Discord to register the commands
-- Try using the command with `/` - Discord should show autocomplete
+The bot keeps track of who sent a server message in the last 30 minutes. Every 15 minutes, it may DM one of those people, but only when all of these are true:
 
-### Bot goes offline:
-- Check the console logs for errors
-- Make sure your Replit is running and not sleeping
+- At least `RANDOM_DM_MIN_HOURS` have passed since the last random DM. The count also starts over when the bot restarts.
+- That person has not had one in the last `RANDOM_DM_USER_COOLDOWN_HOURS`.
+- A 25% dice roll passes.
 
-## 📄 License
+If the person has DMs closed, she skips them.
 
-MIT License - Feel free to modify and use as you wish!
+## Project layout
 
----
+```
+src/
+  index.ts          Discord client, message handling, startup
+  config.ts         Reads settings from .env
+  personality.ts    Her personality prompt
+  ai.ts             Builds prompts and asks the AI for replies
+  commands.ts       Slash commands
+  memory.ts         Per-channel conversation memory
+  logger.ts         Conversation log files
+  randomDM.ts       Random DMs to active users
+  providers/        Gemini and Ollama back ends
+```
 
-*Made with 💕 for Zero Two fans*
+## Troubleshooting
+
+- **She says something went wrong, or the console shows 429:** the Gemini quota ran out. Wait for it to reset, or switch to Ollama.
+- **She replies twice, once with an error:** two copies of the bot are running. Stop the extra one with Ctrl+C.
+- **She does not respond at all:** check the token, check that Message Content Intent is on, and check that she can read and send messages in that channel.
+- **Login fails with "disallowed intents":** turn on Message Content Intent in the Developer Portal.
+- **Ollama errors:** make sure Ollama is running and that `OLLAMA_MODEL` matches a model you pulled (`ollama list`).
+
+## License
+
+MIT. Use it and change it however you like.
