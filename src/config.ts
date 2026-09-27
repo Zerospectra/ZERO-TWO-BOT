@@ -16,6 +16,11 @@ if (rawProvider === 'gemini' || rawProvider === 'ollama') {
   aiProvider = 'gemini';
 }
 
+function numberFromEnv(name: string, fallback: number): number {
+  const value = parseFloat(process.env[name] || '');
+  return Number.isFinite(value) ? value : fallback;
+}
+
 export const config = {
   discordToken: process.env.DISCORD_BOT_TOKEN || '',
   googleApiKey: process.env.GOOGLE_API_KEY || '',
@@ -25,6 +30,9 @@ export const config = {
   aiProvider,
   ollamaModel: process.env.OLLAMA_MODEL || 'llama3',
   ollamaBaseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+  randomDMEnabled: (process.env.RANDOM_DM_ENABLED || 'true').toLowerCase() !== 'false',
+  randomDMMinHours: numberFromEnv('RANDOM_DM_MIN_HOURS', 6),
+  randomDMUserCooldownHours: numberFromEnv('RANDOM_DM_USER_COOLDOWN_HOURS', 72),
 };
 
 if (!config.discordToken) {

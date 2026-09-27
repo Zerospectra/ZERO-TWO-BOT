@@ -8,7 +8,8 @@ import {
   Routes,
   Message,
   ChannelType,
-  Partials
+  Partials,
+  PermissionFlagsBits
 } from 'discord.js';
 import { config } from './config.js';
 import { initializeAI, generateResponse } from './ai.js';
@@ -23,6 +24,7 @@ import {
   handleDM
 } from './commands.js';
 import { logConversation } from './logger.js';
+import { recordActivity, startRandomDMs } from './randomDM.js';
 
 const client = new Client({
   intents: [
@@ -65,6 +67,7 @@ console.log('Registered commands:', result.map(c => c.name).join(', '));
 
 
 async function handleMessage(message: Message) {
+  let isChimeIn = false;
   try {
     if (message.author.bot) return;
 
@@ -80,12 +83,24 @@ async function handleMessage(message: Message) {
       isDM = true;
     }
 
+    if (message.inGuild()) {
+      recordActivity(message.author.id, message.guild.name);
+    }
+
     const isMentioned = message.mentions.has(client.user!.id);
     const isActivated = memory.isActivated(channelId);
 
-    const shouldRespond = isDM || isMentioned || isActivated;
+    // Sometimes join a conversation in a channel where she is not activated
+    isChimeIn = message.inGuild()
+      && !isMentioned
+      && !isActivated
+      && message.content.trim().length > 0
+      && Math.random() * 100 < config.randomMessageChance
+      && message.channel.permissionsFor(client.user!)?.has(PermissionFlagsBits.SendMessages) === true;
 
-    console.log(`📨 [${message.channel.type}] Message from ${message.author.tag}: isDM=${isDM}, isMentioned=${isMentioned}, isActivated=${isActivated}`);
+    const shouldRespond = isDM || isMentioned || isActivated || isChimeIn;
+
+    console.log(`📨 [${message.channel.type}] Message from ${message.author.tag}: isDM=${isDM}, isMentioned=${isMentioned}, isActivated=${isActivated}, isChimeIn=${isChimeIn}`);
 
     if (!shouldRespond) return;
 
@@ -100,9 +115,9 @@ async function handleMessage(message: Message) {
 
     console.log(`🔄 Generating response for: ${userMessage.substring(0, 50)}...`);
 
-    memory.addMessage(channelId, 'user', userMessage);
-    
+    // Read the history before this message is saved, so the AI does not see it twice
     const history = memory.getHistory(channelId, 50);
+    memory.addMessage(channelId, 'user', userMessage);
 
     const response = await generateResponse(userMessage, history);
 
@@ -122,6 +137,8 @@ async function handleMessage(message: Message) {
     await logConversation(message.author.tag, userMessage, response);
   } catch (error) {
     console.error('❌ Error in handleMessage:', error);
+    // Stay quiet when nobody asked her to reply
+    if (isChimeIn) return;
     try {
       await message.reply('*looks confused* Sorry darling, something went wrong in my head... Can you say that again? 💕');
     } catch (replyError) {
@@ -139,6 +156,8 @@ client.once(Events.ClientReady, async (readyClient) => {
   console.log(`✅ Serving ${readyClient.guilds.cache.size} server(s)`);
   console.log(`✅ AI Provider: ${config.aiProvider.toUpperCase()}`);
   console.log(`✅ Model: ${config.aiProvider === 'ollama' ? config.ollamaModel : config.geminiModel}`);
+  console.log(`✅ Random chime-in chance: ${config.randomMessageChance}%`);
+  console.log(`✅ Random DMs: ${config.randomDMEnabled ? `on (at least ${config.randomDMMinHours}h apart, ${config.randomDMUserCooldownHours}h per user)` : 'off'}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   await registerCommands();
@@ -151,6 +170,8 @@ client.once(Events.ClientReady, async (readyClient) => {
       state: '𝓣𝓱𝓲𝓷𝓴𝓲𝓷𝓰 𝓪𝓫𝓸𝓾𝓽 𝓶𝔂 𝓭𝓪𝓻𝓵𝓲𝓷𝓰'
     }]
   });
+
+  startRandomDMs(readyClient);
 });
 
 client.on(Events.InteractionCreate, async (interaction) => {

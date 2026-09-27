@@ -10,7 +10,8 @@ An AI-powered Discord bot featuring **Zero Two** from *Darling in the FranXX*, p
   - Responds to @mentions anywhere
   - Replies to all DMs automatically
   - Can be activated to chat freely in specific channels
-  - Sometimes sends spontaneous messages (when activated)
+  - Sometimes joins a conversation in a channel where she is not activated
+  - Now and then, sends a DM to a user who is active in a server with her (rarely)
 - **🎯 Slash Commands**: Easy-to-use commands for interaction
 - **🔴 Custom Status**: "Do Not Disturb" with "𝓣𝓱𝓲𝓷𝓴𝓲𝓷𝓰 𝓪𝓫𝓸𝓾𝓽 𝓶𝔂 𝓭𝓪𝓻𝓵𝓲𝓷𝓰"
 - **⚙️ Fully Configurable**: Customize personality, model, and behavior via environment variables
@@ -48,7 +49,10 @@ An AI-powered Discord bot featuring **Zero Two** from *Darling in the FranXX*, p
 **Optional Configuration** (add to Secrets tab if desired):
 - `GEMINI_MODEL` - The Gemini model to use (default: `gemini-2.5-flash`)
 - `ZEROTWO_PERSONALITY_PROMPT` - Custom personality prompt (optional - default included)
-- `RANDOM_MESSAGE_CHANCE` - Chance (0-100) for spontaneous messages (default: `5`)
+- `RANDOM_MESSAGE_CHANCE` - Chance (0-100) that she replies to a message in a channel where she is not activated (default: `5`). Set `0` to turn this off.
+- `RANDOM_DM_ENABLED` - Set `false` to turn off random DMs (default: `true`)
+- `RANDOM_DM_MIN_HOURS` - Minimum hours between two random DMs (default: `6`)
+- `RANDOM_DM_USER_COOLDOWN_HOURS` - Minimum hours before the same user gets another random DM (default: `72`)
 
 ### 3. Invite the Bot to Your Server
 
@@ -87,9 +91,9 @@ An AI-powered Discord bot featuring **Zero Two** from *Darling in the FranXX*, p
 ### In Servers:
 - **@mention her**: `@Zero Two hello!` - She'll respond to mentions anywhere
 - **Use /activate**: In any channel, use `/activate` to let her chat freely
-  - She'll respond to messages in that channel
-  - She might occasionally send spontaneous messages
+  - She'll respond to all messages in that channel
   - Use `/deactivate` to stop free chatting
+- **Random chime-ins**: In other channels, she sometimes replies to a message on her own
 
 ### In DMs:
 - Just send her a message! She always responds to DMs
@@ -105,8 +109,17 @@ Change the `GEMINI_MODEL` secret to use different Gemini models:
 - `gemini-2.0-flash-exp` (experimental)
 - `gemini-1.5-pro` (more capable, slower)
 
-### Spontaneous Message Frequency
-Adjust `RANDOM_MESSAGE_CHANCE` (0-100) to control how often Zero Two sends random messages in activated channels.
+### Random Chime-ins
+Set `RANDOM_MESSAGE_CHANCE` (0-100) to control how often Zero Two joins a conversation in a channel where she is not activated. Set `0` to turn this off.
+
+### Random DMs
+Now and then, Zero Two sends a DM to a user who sent a server message in the last 30 minutes. These rules keep the DMs rare:
+- Two random DMs are at least `RANDOM_DM_MIN_HOURS` apart (default: 6 hours).
+- The same user does not get another random DM within `RANDOM_DM_USER_COOLDOWN_HOURS` (default: 72 hours).
+- After a restart, she waits `RANDOM_DM_MIN_HOURS` before the first random DM.
+- At each check (every 15 minutes), there is only a 25% chance that she sends a DM.
+
+Set `RANDOM_DM_ENABLED=false` to turn this off.
 
 ## 🛠️ Technical Details
 
